@@ -2,57 +2,58 @@ console.log('Starting notes.js');
 
 const fs = require('fs');
 
-let addNote = (title, body) => {
+const fetchNotes = () => {
+	try {
+		let noteString = fs.readFileSync('./notes.txt', 'utf-8');
+		notes = JSON.parse(noteString);
+		return notes;
+	} catch(err) {
+		return [];
+	}
+};
+
+const saveNotes = (notes) => {
+	fs.writeFileSync('./notes.txt', JSON.stringify(notes));
+};
+
+const addNote = (title, body) => {
+	let notes = fetchNotes();
 	let note = {
 		title,
 		body
 	}
-	let notes = [];
-	try {
-		noteString = fs.readFileSync('./notes.txt', 'utf-8');
-		notes = JSON.parse(noteString);
-	} catch(err) {
-		// no need to do anything, as notes is already defined as an empty array
-	}
+
 	let uniq = !(notes.some(val => val.title === title));
 
 	if (uniq) {
 		notes.push(note);
-		fs.writeFileSync('./notes.txt', JSON.stringify(notes));
-		console.log('Added note: ', title, body);
-		return true;
+		saveNotes(notes);
+		return note;
 	}
-	console.log('Unable to add note - need a unique title!');
-
-
 };
 
 let getAll = () => {
-	let notes = fs.readFileSync('./notes.txt');
-	if (notes.length) {
-		let noteArr = JSON.parse(notes);
-		return noteArr;
-	} else {
-		console.log('No notes');
-		return null;
-	}
+	return fetchNotes();
 };
 
 let getNote = (title) => {
-	let noteArr = getAll();
-	let hotNotes = noteArr.filter(val => {
-		return val.title === title;
-	});
-	return hotNotes;
+	let notes = fetchNotes();
+	let hotIndex = notes.findIndex(val => val.title === title);
+	if (hotIndex > -1) {
+		return notes[hotIndex];
+	}
+	return false;
 }
 
 let removeNote = (title) => {
-	let noteArr = getAll();
-	let hotIndex = noteArr.findIndex(val => val.title === title);
-	noteArr.splice(hotIndex, 1);
-	let noteString = JSON.stringify(noteArr);
-	fs.writeFileSync('./notes.txt', noteString);
-	console.log('Deleted: ', title);
+	let notes = fetchNotes();
+	let hotIndex = notes.findIndex(val => val.title === title);
+	if (hotIndex > -1) {
+		notes.splice(hotIndex, 1);
+		saveNotes(notes);
+		return true;
+	}
+	return false;
 }
 
 
