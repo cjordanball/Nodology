@@ -7,7 +7,7 @@
 ### Installation of NodeJS
 1. Installing NodeJS is super simple. Just go to *https://noddejs.org* and click on the download button, and follow the directions on the installer.
 
-2. This installation of nodeJS will also install the **node package manager**, which will allow easy installation of dependencies. Don't worry about this now, just know you have it installed, which one can see by typing the following at the command line:
+2. This installation of NodeJS will also install the **node package manager**, which will allow easy installation of dependencies. Don't worry about this now, just know you have it installed, which one can see by typing the following at the command line:
     ```
     npm -v
     node -v
@@ -25,9 +25,12 @@
 
 5. Perhaps the **single, key feature** of Node is its **event-driven, non-blocking, I/O model**. This is covered in much more detail in my paper on *Asynchronous Programming* is JavaScript, but the bottom line is this: doing things in memory is tons faster for the computer than anything involving reading or writing (input/output, or I/O). A server often does lots of I/O work with relatively light work otherwise. Because it is **non-blocking**, when it gets a request for some information that must be acquired from a database, for example, it sends out the request to the database. Then, it goes off to its next tasks, until it hears that the search has completed. Then it does the next step. **It does not wait around for the query to complete before going to the next task.**
 
-6. Another important aspect of Node is that it is **single-threaded.** In an environment where there is lots of I/O and light local work, this hardly matters; however, if there was heavy computational work going on, the the single thread could get tied up, without the ability to set up another thread to handle other user's requests.
+6. Another important aspect of Node is that it is **single-threaded.** In an environment where there is lots of I/O and light local work, this hardly matters; however, if there is heavy computational work going on, the the single thread could get tied up, without the ability to set up another thread to handle other user's requests.
 
 ### Node Package Manager (npm)
+:::danger
+Note that many are now switching away from npm to **Yarn**, a joint project of Facebook, Google, and others. For more information, go to https://yarnpkg.com/lang/en/. However, note that the packages are still maintained on npm's repository site.
+:::
 1. **Node packeage manager** is a program that downloads automatically with Node if installed through the *nodejs.org* website installer. It provides a number of command-line tools that manage *packages* or *dependencies*, open-source code that we can access to handle tasks in our application.
 
 2. At this point, we are not going to go into much detail regarding npm; however, one should definitely know the following commands:
@@ -42,7 +45,7 @@
 
 
 ### Starting Node
-1. One of the very first things we can do with Node is, at the terminal, type in the command **node**. This creates a node process, and starts a **repl**, which stands for "read, eval, print loop". The repl keeps node open, the process does not immediately close. When we type something in at the standard in (*i.e.*, the console), the node process takes the input, evaluates it, and prints the return value, if any to the standard out.  Consider the following:
+1. One of the very first things we can do with Node is, at the terminal, type in the command **node**. This creates a node process, and starts a **repl**, which stands for "read, eval, print loop". The repl keeps node open, the process does not immediately close. When we type something in at the **standard in**con (*i.e.*, the console), the node process takes the input, evaluates it, and prints the return value, if any to the standard out.  Consider the following:
     ```node
     > console.log(10);
     ```
@@ -63,7 +66,7 @@
     ```
     Declaring x has no return value.  Assigning x does have a return value of the assigned value. Console logging has an *effect* of printing out the value, but has no return value. 
     
-2. Another thing of interest that we can do is type "process" at the command line to see the current node process (the analogue of the *document* in the browser). We can see lots of informtion, including environment variables, and methods available to the process (such as exit, which we can use to terminate the process).
+2. Another thing of interest that we can do is type "process" at the command line to see the current node process (the analogue of the *document* in the browser). We can see lots of information, including environment variables, and methods available to the process (such as exit, which we can use to terminate the process).
 
 3. Next, we can create a Node program and run it in a process. To do this, create a directory, and a file inside it with the following:
     ```javascript
