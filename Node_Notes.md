@@ -112,7 +112,13 @@ Note that many are now switching away from npm to **Yarn**, a joint project of F
 
 3. If we wish to add flags and additional arguments at the command line on startup, Node is not very flexible; everything as separated by a space will be added to the *argv* array. We will have the information and can parse it, but it will be a lot of slogging through string manipulation.
 
-4. For purposes of this outline and the accompanying *notes-node* app, we will avoid this tedium by using an npm module to handle the parsing of the command line input - a package called **yargs**.
+4. For purposes of this outline and the accompanying *notes-node* app, we will avoid this tedium by using an npm module to handle the parsing of the command line input - a package called **yargs**. Yargs makes available on the property **yargs.argv** our command line input in an object with the following form:
+
+    a. commands without any preceding notation are stored in an array as the value of the "_" property,
+    
+    b. properties preceded by two dashes and assigned a value (node app.js --name=Jordan or node app.js --name Jordan) will be properties in the object, as a key/value pair.
+    
+    c. if we put quotation marks around our value, it can be multiword
 
 ## Socket.io
 ### Introduction
