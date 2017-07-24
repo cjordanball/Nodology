@@ -83,15 +83,15 @@ Note that many are now switching away from npm to **Yarn**, a joint project of F
 ## Modules / Require
 1. One of the key aspects of Node is the module system, which allows us to isolate code into units of functionality, and keeping from placing everything on the global scope.
 
-2. We have mentioned npm as a means of gaining access to code written by others to handle various tasks. In addition, Node itself is built out of numerous modules, which we can view by clicking on the API docs tab of *nodejs.org*. For example, there are File System, Crypto, Stream, etc. Node is meant to run very lightweight, so we must import in the particular modules for the functionality we need - only a very limited set of functionality is included in the plain node package.
+2. We have mentioned npm as a means of gaining access to code written by others to handle various tasks. In addition, Node itself is built out of numerous modules, which we can view by clicking on the API docs tab of *nodejs.org*. For example, there are *File System*, *Crypto*, *Stream*, *etc*. Node is meant to run very lightweight, so we must import in the particular modules for the functionality we need - only a very limited set of functionality is included in the plain node package.
 
 3. The **require()** method is part of every module instance, and we can, but do not need to, precede "require()" with "module.".  So, the following are the same:
-    ```
+    ```javascript
     const fs = module.require('fs');
     // or
     const fs = require('fs');
     ```
-4. Note that when we require a module, node will first look to its modules, then to those in the *node_modules* folder. These do not need paths, since node will know where to look. But if we are immporting our own files, we will need to provide path information as well as the name.
+4. Note that when we require a module, node will first look to its modules, then to those in the *node_modules* folder. These do not need paths, since Node will know where to look. But if we are immporting our own files, we will need to provide path information as well as the name.
 
 5. On the other side of require is the **exports** property of the module object. *exports* is an object, and anything placed into it is made available to be required into another file/module.
 
