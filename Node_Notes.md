@@ -29,7 +29,7 @@
 
 ### Node Package Manager (npm)
 :::danger
-Note that many are now switching away from npm to **Yarn**, a joint project of Facebook, Google, and others. For more information, go to https://yarnpkg.com/lang/en/. However, note that the packages are still maintained on npm's repository site.
+Note that many are now switching away from npm to **Yarn**, a joint project of Facebook, Google, and some others. For more information, go to https://yarnpkg.com/lang/en/. However, note that the packages are still maintained on npm's repository site.
 :::
 1. **Node packeage manager** is a program that downloads automatically with Node if installed through the *nodejs.org* website installer. It provides a number of command-line tools that manage *packages* or *dependencies*, open-source code that we can access to handle tasks in our application.
 
@@ -118,8 +118,64 @@ Note that many are now switching away from npm to **Yarn**, a joint project of F
     
     b. properties preceded by two dashes and assigned a value (node app.js --name=Jordan or node app.js --name Jordan) will be properties in the object, as a key/value pair.
     
-    c. if we put quotation marks around our value, it can be multiword
+    c. if we put quotation marks around our value, it can be multiword.
 
+
+## Debugging Node (Version 8+)
+1. Version 8 of Node has a couple of new debugging tools, so confirm that you are using a current version before trying to apply the techniques described herein.
+
+### Debug Mode
+1. One new feature added was a **debugging mode** allowing debugging from the command line. This is engaged by inserting the word **inspect** between the *node* command and the file name, as so:
+    ```
+    node inspect app.js
+    ```
+2. When node is running in *debug mode*, it will pause even before it executes any lines. At the beginning, we see something interesting:
+    ```javascript
+    < Debugger listening on ws://127.0.0.1:9229/89fe2a27-e345-4b91-b502-63affcd0a042
+    < For help see https://nodejs.org/en/docs/inspector
+    < Debugger attached.
+    Break on start in debugging.js:1
+    > 1 (function (exports, require, module,
+        __filename, __dirname) { let person = {
+      2   name: 'Jordan'
+      3 };
+    ```
+    The first three lines are merely boilerplate. However, note that our code is wrapped in a self-executing function with a number of parameters important to a module. This is done by Node for all module files. This gives us access to a number of properties, as listed above.
+    
+3. Inside the debug mode, we can access the node **repl**, by typing "repl" at the command line. To close the *repl* and go back to debug mode, type *Ctrl + C*. Using the repl, can check to see what the values of our variables are, *etc.* In short, in the repl mode, **we can access the application as it currently stands.**
+
+4. If we have a larger application, we would not want to go line-by-line through our code using the *n* command (see below) to get to some place we need to go look. Instead, we can place the **debugger** statment in our code, which acts as a break. Then, if we hit the *c* command, we will continue up to the next debugger statement. 
+
+5. Some commands we can use are:
+
+    a. **list**(x): instructs node to display in the terminal the preceding and following x lines of code from where we are.
+    
+    b. **n**: is short for *next*, and moves the application along to the very next statement. This will run the code to the beginning of the next statement. For example, if oour program shows in the terminal as:
+    ```
+    < Debugger listening on ws://127.0.0.1:9229/89fe2a27-e345-4b91-b502-63affcd0a042
+    < For help see https://nodejs.org/en/docs/inspector
+    < Debugger attached.
+    Break on start in debugging.js:1
+    > 1 (function (exports, require, module, __filename, __dirname) { let person = {
+      2 	name: 'Jordan'
+      3 };
+      4
+      5 person.age = 25;
+      6
+      7 person.name = 'Mike';
+      8
+      9 console.log(person);
+     10 });
+    ```
+    After we enter *n* once, we will advance from the wrapper function to the first line of our code. However, this first line has not yet run, and *person still has no name*. After we enter *n* a second time, the arrow will move down to line 5, and *person* will have the name of "Jordan"; however, person will not yet have an age.
+    
+    c. **c**: is short for *continue*, and tells the application to continue on to the end, or to the next **debugger** statement, not stopping line-by-line.
+
+6. We can also use the debug mode with **nodemon**. This allows us to make changes, then immediately start back up in debug mode. Just substitute *nodemon* for *node* in the command line.
+
+
+    
+    
 ## Socket.io
 ### Introduction
 1. **Web Sockets** is a protocal for two-way, real-time communication between a server and client. The client could be a web-app, a phone app, *etc.*

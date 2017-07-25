@@ -3,7 +3,7 @@ const fs = require('fs');
 
 const fetchNotes = () => {
 	try {
-		let noteString = fs.readFileSync('./notes.txt', 'utf-8');
+		let noteString = fs.readFileSync('./notes.json', 'utf-8');
 		notes = JSON.parse(noteString);
 		return notes;
 	} catch(err) {
@@ -12,7 +12,7 @@ const fetchNotes = () => {
 };
 
 const saveNotes = (notes) => {
-	fs.writeFileSync('./notes.txt', JSON.stringify(notes));
+	fs.writeFileSync('./notes.json', JSON.stringify(notes));
 };
 
 const addNote = (title, body) => {
@@ -55,10 +55,20 @@ let removeNote = (title) => {
 	return false;
 }
 
+let logNote = (note) => {
+	debugger;
+	//break on this line and use repl to output the note.
+	console.log('--');
+	console.log(`Title: ${note.title}`);
+	console.log(`Body: ${note.body}`);
+}
+
+
 
 module.exports = {
 	addNote,
 	getAll,
 	getNote,
-	removeNote
+	removeNote,
+	logNote
 }

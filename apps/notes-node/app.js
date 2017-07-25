@@ -14,7 +14,8 @@ switch(command) {
 	case 'add':
 		let note = notes.addNote(argv.title, argv.body);
 		if (note) {
-			console.log(`Success! Title: ${note.title}, Body: ${note.body}`);
+			//console.log(`Success! Title: ${note.title}, Body: ${note.body}`);
+			notes.logNote(note);
 		} else {
 			console.log('Please give the note a unique title.');
 		}
@@ -25,7 +26,8 @@ switch(command) {
 	case 'read':
 		let res = notes.getNote(argv.title);
 		if (res) {
-			console.log(`Title: ${res.title}, Body: ${res.body}`);
+			notes.logNote(res);
+			//console.log(`Title: ${res.title}, Body: ${res.body}`);
 		} else {
 			console.log(`Unable to locate note with title of ${argv.title}.`)
 		}
