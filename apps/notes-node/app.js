@@ -4,37 +4,64 @@ const yargs = require('yargs');
 
 const notes = require('./notes');
 
-console.log(yargs.argv);
+const title = {
+			describe: 'Title of note',
+			demandOption: true,
+			alias: 't'
+		};
+
+const body = {
+			describe: 'This is the text of the note.',
+			demandOption: false,
+			alias: 'b',
+			default: "Four score and seven years ago . . ."
+		}
+
+const argv = yargs
+
+	.command('add', 'Add a new note.', {
+		title,
+		body
+	})
+	.command('list', 'List all notes')
+	.command('read', 'Read a note', {
+		title
+	})
+	.command('remove', 'Delete a note', {
+		title
+	})
+	.help()
+	.argv;
 
 
-const argv = yargs.argv;
-const command = process.argv[2];
+
+const command = argv._[0];
 
 switch(command) {
 	case 'add':
 		let note = notes.addNote(argv.title, argv.body);
 		if (note) {
-			//console.log(`Success! Title: ${note.title}, Body: ${note.body}`);
 			notes.logNote(note);
 		} else {
 			console.log('Please give the note a unique title.');
 		}
 		break;
 	case 'list':
-		console.log(notes.getAll());
+		let allNotes = notes.getAll();
+		console.log(`Printing ${allNotes.length} notes:`)
+		allNotes.forEach(val => notes.logNote(val));
 		break;
 	case 'read':
 		let res = notes.getNote(argv.title);
 		if (res) {
 			notes.logNote(res);
-			//console.log(`Title: ${res.title}, Body: ${res.body}`);
 		} else {
 			console.log(`Unable to locate note with title of ${argv.title}.`)
 		}
 		break;
 	case 'remove':
 		let removeRes = notes.removeNote(argv.title);
-		if (res) {
+		if (removeRes) {
 			console.log('Note deleted');
 		} else {
 			console.log('There was a problem - no such note.');
