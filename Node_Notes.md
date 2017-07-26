@@ -120,6 +120,37 @@ Note that many are now switching away from npm to **Yarn**, a joint project of F
     
     c. if we put quotation marks around our value, it can be multiword.
 
+5. *Yargs* is actually a pretty powerful and comprehensive application for dealing with command-line input. The documentation is generally rather scattered, and obfuscated by a need to adhere to a pirate theme, but one can find a good be of information in the API documentation. Below, we go through some of its key features, to get a start.
+
+6. At its most basic, we have *yargs.argv*, which is simply an object containing the parsed arguments as a group of key/value pairs. But before the *.argv*, we can chain a wide variety of methods, as documented. For example, we will use the **command()** method. This method takes a command name as the first parameter, followed by a description for the second parameter (used to build help dcoument), followed by an options object detailing what arguments the command requires:
+
+    ```javascript
+    const argv = yargs
+        .command('add', 'Add a new note', {
+            title: {
+                describe: 'Title of the note.',
+                demandOption: true,
+                alias: 't'
+            },
+            body: {
+                describe: 'This is the text of the note.',
+                demandOption: false,
+                alias: 'b',
+                default: "Four score and seven years ago . . ."
+            }
+        })
+        .help()
+        .argv
+    ```
+    We can pass in a *command* method for each command that we anticipate being entered by our user.
+    
+    Note the provision of an **alias**. This allows us to provide shortcuts to the user. Also, the alias can be preceded by a single hyphen, rather than double hyphens for the main argument name.
+    
+    Note the insertion of the **help()** method. This allows someone to access information by running "--help** at the command line.
+    
+    
+    
+    
 
 ## Debugging Node (Version 8+)
 1. Version 8 of Node has a couple of new debugging tools, so confirm that you are using a current version before trying to apply the techniques described herein.
@@ -173,9 +204,28 @@ Note that many are now switching away from npm to **Yarn**, a joint project of F
 
 6. We can also use the debug mode with **nodemon**. This allows us to make changes, then immediately start back up in debug mode. Just substitute *nodemon* for *node* in the command line.
 
+### Debugging with Chrome Dev Tools
+1. We can do pretty much exactly the same things in the browser (Google Chrome) as we are doing above in the terminal; however, to do this, we should run our app as follows:
 
-    
-    
+    ```
+    node --inspect-brk appName.js
+    ```
+    After doing that, we can get to the debugging page by entering the following in our address bar:
+    ```
+    chrome://inspect
+    ```
+    Then, on the inspect page, we need to click on the "Open dedicated DevTools for Node" link.
+
+2. Note that we can toggle access to the console from the new window with the *ESC* key. In the console, of course, we will have access to the REPL.
+
+3. The primary tab that we will use is the *Sources* tab, which will show our code and debugger tools on the side.
+
+4. We can set breakpoints in our code simply by clicking on the lines in the debugger window.
+
+
+## Asynchronous Programming
+
+
 ## Socket.io
 ### Introduction
 1. **Web Sockets** is a protocal for two-way, real-time communication between a server and client. The client could be a web-app, a phone app, *etc.*

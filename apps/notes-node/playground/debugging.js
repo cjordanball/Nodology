@@ -1,10 +1,8 @@
 let person = {
 	name: 'Jordan'
 };
-debugger;
-person.age = 25;
 
-debugger;
+person.age = 26;
 
 person.name = 'Mike';
 
