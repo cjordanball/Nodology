@@ -1,0 +1,14 @@
+{
+  "name": "weather-app",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "CJB3",
+  "license": "ISC",
+  "dependencies": {
+    "request": "2.73.0"
+  }
+}
