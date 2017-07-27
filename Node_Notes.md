@@ -224,6 +224,43 @@ Note that many are now switching away from npm to **Yarn**, a joint project of F
 
 
 ## Asynchronous Programming
+1. One of the core features of Node is that most of its methods are **asynchronous**, or **non-blocking**. This means that they do not stop the programming flow, but allow other things to happen while the computer is waiting for the asynchronous process to complete. For example, let's say that the user can click on a button, at which time the front-end will send a request to a server to get the current price of Google stock. Instead of freezing the client machine until the stock price gets back to it, it can be doing other things.
+
+2. As a quick example, look at the following:
+    ```javascript
+    console.log('Starting app.');
+
+    setTimeout(() => {
+        console.log('inside of callback');
+    }, 2000);
+
+    setTimeout(() => {
+        console.log('second timeout');
+    }, 0);
+
+    console.log('Finishing up');
+    ```
+    The above code will generate the following output in the console:
+    ```
+    Starting app.
+    Finishing up
+    second timeout
+    inside of callback //(pops up after two seconds)
+    ```
+    The first line should be no surprise. The last line should be guessable from any understanding of the concept of *non-blocking*, we know it is not going to happen for 2 seconds, and the others are ready to go! The big surprise might be the position of the second and third lines - if the first one is set to wait for 0, then why is it behind the last line?
+    
+3. Below is an illustration of the pieces that are operating behind-the-scenes with Node. When there are no asynchronous methods, then the only part that will be in use is the **Call Stack**. This is a **LIFO** data structure that holds open operations. When we call on a function, it goes onto the top of the stack, when it returns (or completes), it goes off the stack; however, things can only happen at the top of the stack. 
+
+![image](https://s3.amazonaws.com/cjbinfo-docs/AsyncPieces.png)
+    
+
+4. So, in the above, the first thing that will go onto the call stack will be the **main()** function, the wrapping function that Node puts on all modules. Then, on top of that, we wil have the assignment of 1 to the variable x. That will complete and go off the stack, but *main()* will remain open at the bottom, since it also wraps the other two lines. Then, the assignment to y of (x + 9) will occur and go off the stack. Then the console.log method will go on the stack and be executed, go off the stack.
+
+5. When we have an async method, it goes to the Call Stack, and the thing that it does is register the method with the **Node API**. It will sit there until the occurence of an event that will tell it to send a callback to the **Callback Queue**. A *queue* is a **FIFO** data structure, so things get in line to be sent to the *Call Stack*.
+
+6. The **Event Loop** continuously runs, and, if the *Call Stack* is empty and there is something in the *Callback Queue*, it moves the first item in the queue to the Call Stack for execution.
+
+7. When the *Call Stack*, *Node API*, and *Callback Queue* are all empty, then the process will terminate. Note, however, that there it is not necessary that the process ever terminates. We could have a server, for example, that waits indefinitely for a request to come in, which will cause it to do something and send a callback to the Callback Queue containing the response. That process would remain open, until someone kills it by hitting Ctrl + C.
 
 
 ## Socket.io
