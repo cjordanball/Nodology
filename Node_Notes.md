@@ -279,6 +279,527 @@ Note that many are now switching away from npm to **Yarn**, a joint project of F
 
 4. What we actually get is an error object, the most important property of which will be **code**.
 
+## Promises
+
+:::danger
+The following is brought over from a paper on Generators, which had a good section on promises
+:::
+
+## Asynchronous Code in Javascript -
+## Talking 'bout My Generator
+
+### A.  Why Even Use Asynchronous Code
+
+Typically, when one begins learning to code, one learns to do so in a very methodical manner. One might start a program by declaring a variable, then doing something to assign that variable a value, then do something else to transform that value, then return that value to a new variable, or print it to the screen in some manner.  For example:
+```javascript
+    var x;
+    x = "Now is the winter of our discontent made glorious summer";
+    x = x.split(' ').reverse().join(' '));
+    console.log(x);
+```    
+After the above code runs, we see the rather unShakespearean "summer glorious made discontent our of winter the is Now".
+
+The above code is **synchronous** in its approach. Each line is completed before the computer moves onto the next line.  We don't need to worry that we are splitting, reversing or joining parts of x before we knew what x is, because we can trust that the computer will complete the assignment of our string to the variable x, and *only then* will it start performing various string and array methods on that value.
+
+In some contexts, it makes a lot of sense to have our code work in an asynchronous manner. For example, the code behind a web page often has no idea when it will be called. If we have two buttons, for example, one red and the other blue, and clicking on either one will turn the text in a paragraph the color of the chosen button, we have no idea the order in which the code will be called, or when particular code will be called, or even if it will ever be called at all.
+
+To deal with this, we will attach to pieces of the webpage (or, rather, the **Document Object Model (DOM)** that tells the browser how to draw the webpage), **event listeners**, which lie in wait for the designated event to happen to the designated piece of real estate on the webpage (or, more technically, for the event to fire on a designated element in the DOM). To each event listener, we give two important pieces of information: the type of event (a click of the mouse, the typing of a particular key, *etc.*) and a **function**, generally referred to as an **event listener**, which tells the computer what to do when the event happens to the DOM element to which the listener is attached. Obviously, we never know when one of these functions may be called into action. The user may never desire to turn the text a funky color.
+
+Another common use of asynchronous progromming arises in the context of a server, a computer program responsible for receiving requests from its clients and responding, typically by returning it some information that it either has readily available, or has the ability to obtain from other sources.
+
+At this point, we should note that we are dealing with three very different ranges of time when we deal with web programs. The computer may be dealing with things within the memory contained within its processor or in random access memory, or may be getting data from its hard drive, or may be going out onto a network (including the internet) to obtain information.  These could be compared to one answering:
+
+a.  what your own phone number is,
+    
+b.  what your neighbor's phone number is, requiring you to go to your home bookshelf and look up the number,
+    
+c.  what is the phone number of Sung-Jin Kim of Pusan, requiring that you go across town to a major library that has phone books from around the world.
+    
+The first answer is given in about one second, the second question may take about five minutes, and the third may take anywhere from a couple of hours to a couple of days, depending on when you have time to make the trip to the library.  Similarly, your computer takes much longer (tens to thousands of times longer, depending on the type of request) to get data contained on a file on its hard drive than to retrieve it from memory, and even greater amounts of time (going from milliseconds to seconds, minutes, hours) to obtain from a source on a network, including the internet.
+
+Oftentimes, a server on a network may be engaged in very trivial work, but whole lots of it. For example, it may be receiving thousands of requests each minute for something as simple as checking to see if there is a message and, if so, to send it to the client.  It's total time of actually doing work may be minimal, but it may have a good amount of waiting around. It gets the request, sends its own request out to a database and may wait a couple of seconds for a response, only to take that data and create and send its response to the original request in a matter of nanoseconds.
+
+This is where the synchronous / asynchronous comparison comes into play. Imagine a waiter at a crowded restaurant who greeted the customer at the door, sat them down at a table, stood at the ready until the table ordered, took the order to the kitchen, waited twenty minutes until the food was prepared, took it back to the customer, stood by the table until the meal was finished, presented the check, collected payment, and then, once the customer left, went to the door to greet the next customer.  This is basically the synchronous approach to table-waiting. Obviously, the restaurant owner will be unhappy with only one table being occupied at a time.  He can handle the problem in two ways.
+
+First, he can continue the synchronous approach, but just hire more waiters, one for each table, who will continue to give excellent service, but at a very hight cost; each waiter will engage in short bursts of activity, followed by long intervals of waiting around. This approach is often used by computers, with the waiters being called threads.
+
+Alternatively, the restaurant owner can point out that all the time spent standing around could be used to serve other customers, and that one waiter can easily handle several tables. Occasionally, this may cause some delay, if two tables happen to finish their meal at exactly the same time, for example, but such backups will be minor, because there is no single task that will block up the waiter for a very long time. This is very much the asynchronous approach, and a server language such as Node.js does the computer equivalent of circling the restaurant, constantly taking care of any task as it arises.
+
+When our Node.js server is running asynchronously, looping and looping looking for the next thing to do, we should note the kind of operations that are going to act asynchronously. A lot of our code is going to run in a synchronous manner; for example, our initial little program that reverses the words of the Richard III is still going to run in an orderly way from start to finish. However, let us look at the following extension of that program:le:
+```javascript
+var x;
+x = readFile('./richard3.txt');
+x = x.split(' ').reverse().join(' '));
+console.log(x);
+```
+In this imaginary code, readFile is represents a function that will go to the file designated in the parameter, will get the text contained in that file, and assign it to the variable x. However, although there is actually a method in Node called *readFile()* that performs roughly the task just described, the above approach will not work because the readfile method is **asynchronous**. Remember, the task of receiving text from another file, even one contained on the computer's own hard drive, takes tens, hundreds, or even thousands of times longer than the other operations going on in the computer's memory.  Thus, the approach taken by Node.js is to send off for the text in the other file, then move on to the next task at hand. (For what it's worth, Node.js actually provides a synchronous version of this method, readFileSync(), which works in a synchronous manner, waiting until completion then returning a value).
+
+If we try the code as written above (actually, we would make a few additions first, "requiring in" the fs module in which readFile() resides, and adding another parameter to readFile to have it return text), we would have a problem: before readFile had gotten a value to assign to x, the computer would have moved on to the next line and x, still being undefined, would have no *split()* method and this would generate an error. So, basically, we are trying to write code in a synchronous style when the computer just won't behave.  Remember (really, please remember this for later), that all we want in this example is for the computer to just take a breather while we get the text from the text file, and then start back up.
+
+### B. What to do About Asynchronous Code?
+
+#### Callbacks
+
+So, how do we get the computer to wait? The basic, standard approach is to use **callback functions** to wait around until the action is complete, then execute. Typically, an asynchronous method in Node.js will have the following form (the example below shows the readFile method as actually used:
+```javascript
+const fs = require('fs');
+
+fs.readFile('./textFile.txt', {encoding: 'utf-8'}, (err, data) => {
+    if (err) {
+        //do something with the error
+    } else {
+        //do something with the data obtained
+    }
+}
+
+```
+The biggest feature of the above code may be what there is not - there is no assignment of a value from the readFile method; no way to put the data into one's pocket to bring out later when needed. Instead, one knows that whenever the computer gets around to reading the text contained in our file *textFile.txt*, then the callback function will spring into action.  If the *readFile()* method was unsuccessful, *e.g.*, the file did not exist, or the data was corrupted, then we will do something to handle the error; however, if all goes as planned, then the text obtained will be present in the *data* argument, and we can do what we want with it in the *else* condition.
+
+Very quickly, however, one discovers that, like a crab pot, it is very easy to enter the callback world but very difficult to get out. **Anything that depends on the existence of the data obtained by our *readFile* must be dealt with in the *else* condition, it will not be available outside it.**  In addition, we may have further asynchronous tasks.  For example, we may take the data obtained, manipulate it some manner to obtain a URL, then go to that URL to obtain some data, which we will then wish to write to a file.  For each of those two operations, we will have another level of callbacks, and very quickly learn what is meant by the term **callback hell.**  One might compare the experience to a beginning skiier being halfway down an expert-level slope, just wanting to make everything stop, store his data somewhere, and never come back again, only to realize that the only way out is to just keep moving.
+
+#### Promises
+
+One means of dealing with asynchronous functions that has proved a popular alternative to callback hell has been the use of promises.  They have been in use through third-party libraries for a while, but have recently become a part of the "official" JavaScript language with the adoption of ES6.
+
+Basically, a **promise** is an object that is returned by an asynchronous function that initially is in a state of **pending**, *i.e.*, the function is still out trying to do whatever it is supposed to do. For example, if we require in the node-fetch library, we can access its **fetch** method, which takes a URL and obtains data from that source.  For example:
+```javascript
+const fetch = require('node-fetch');
+
+let x = fetch('https://www.google.com/#q=kitten+pictures')
+```
+The above code will assign a promise to x.  The promise has a **then()** method, which takes two parameters:
+
+a.  the first is a "success function", the parameter of which is the data returned by the fetch,
+
+b.  the second is a "failure function", the parameter of which is the error object returned by the failed promise.
+
+So, our most basic example might look like:
+```javascript
+const fetch = require('node-fetch');
+
+let x = fetch('https://www.google.com/#q=kitten+pictures');
+
+x.then((res) => {
+	console.log('success', res);
+}, (err) => {
+	console.log('failure', err);
+});
+```
+The code above will result in a giant response object appearing in the console, aasuming Google coughs up its response.  If something goes wrong (for example, if you have Comcast as your internet provider), then you will end up getting an error object, to be handled by the callback passed in as the second parameter.
+
+Promises do have some other features that make them more convenient to work with than callbacks. For example, they can be chained, and a **.catch()** method can be placed at the end of the chain, so that there is a single location for handling errors that arise, rather than having a separate error handling function for each promise in a chain. In addition, there are methods for handling multiple promises at a time and other situations; however, we will leave those points for the reader to research, in order to get to our primary focus, the use of generators.
+
+#### One Last Issue - Promisifying an Asynchronous Method
+
+As we have seen, many asynchronous methods do not employ the promise model, but use callbacks, very importantly the methods provided by Node.js.  We will be working below on a strategy for working simultaneously with generators and promises to allow one to write asynchronous code in a very synchronous manner. This would do us little good, however, if the methods we were running did not return promises, but used callbacks.
+
+Fortunately, one can easily convert an asynchronous callback-style method into an asynchronous promise style method by a process referred to, logically enough, as **promisifying**.  In fact, some implementations of promises, such as *Bluebird*, comes with a ready-to-go promisfy method.  To understand it, however, let us look at a simple example, once again using Node.js's *fs.readFile()* method. As you probably recall, this asynchronous method employs callbacks, and the following is our method for converting it to a new method, which we will call *readFileP()*, which will use promises instead.
+```javascript
+readFileP (fileName, codeType) {
+    return new Promise((resFunc, rejFunc) => {
+        try {
+            fs.readFile(fileName, { encoding: codeType }, (err, data) => {
+                if (err) {
+                    rejFunc(err);
+                } else {
+                    resFunc(data);
+                }
+            });
+        } catch (err) {
+            rejFunc(err);
+        }
+    });
+}
+```
+The above code is quite straightforward, but notice that our new method, *readFileP*, actually returns something, a promise. It then converts the two situations, an error or success, addressed by the callback into the two parameters of the newly created Promise, which will be accessible to the *then()* or *catch()* methods.
+
+#### Generators
+
+**Generators** were introduced to Javascript in the ECMA-2015 standard, and offer a new way of dealing with asynchronous code in a very synchronous manner. Because the concept of a generator is rather new in Javascript, we will begin with small steps, before getting to our ultimate destination.
+
+1.  To begin, lets examine the traditional syntax of a Javascript function declaration.
+
+    ```javascript
+    function createLogger() {
+        console.log('Begin');
+        console.log('End')
+    }
+
+    createLogger();
+    ```
+    Obviously, when called, it prints to the console the string 'Begin', followed on the line below by the string 'End'.
+    
+2.  The syntax of a **generator** looks very much like that of a function, even if it acts quite differently. To create a generator, add an \* to the *function* keyword. 
+    ```javascript
+    function* createLogger() {
+        console.log('Begin');
+        console.log('End');
+    }
+    ```
+    Because of the asterisk, *createLogger* is now a generator, not a function. For those with a background in C, note that the asterisk has nothing to do with pointers, dereferencing, *etc*.
+
+3.  When we call a generator, it returns an **iterator instance**, but there is no execution of the statements contained within the generator at that time.
+    ```javascript
+    function* createLogger(param1, param2) {
+        console.log(param1);
+        console.log(param2);
+        return 'Bazoom!'
+    }
+    
+    let logger = createLogger('Begin', 'End');
+    ```
+    As seen above, we call the generator in the same way we call a function, by the name followed by parenthesis, and we can pass in arguments into the generator. However, when called, the above generator does **not** return the return value "Bazoom!"; rather, it returns an **iterator**, assigned to logger.
+    
+4.  An **iterator** is an object with a very importan method, **next()**.  When called on the iterator instance, causes execution of the statements in the generator from the beginning, or where the iterator left off, if not the first next() call, to the next **yield** statment, and returns an object that contains two properties:
+
+    a.  value: the value provided by the *yield* keyword in the generator,
+    
+    b.  done: a boolean, whether the end of the generator statements has been reached.
+    
+5.  As described in the previous paragraph, the **next()** method on the iterator causes the generator's statements to execute until the keyword **yield** is encountered.  The below would cause output of "Begin", but no "End". To start it up again from the yield statement to the end, we would need to call next() again.
+    ```javascript
+    function* createLogger() {
+        console.log('Begin');
+        yield;
+        console.log('End');
+    }
+
+    let logger = createLogger();
+
+    logger.next();
+    ```
+    In particular, note that a generator can be paused and resumed, so that it can run some of its statements, then take a break, then come back and run some more.  That, coupled with the ability to pass values into and out of the generator, make it a very useful object.
+
+6.  The *value* property of the object returned by the *next()* method is set by the value contained after the **yield** keyword; thus, *yield* serves two purposes, to stop the execution of statement in the generator, and to pass values out of the generator.
+    ```javascript
+    function* createLogger() {
+        console.log('Begin');
+        yield {
+            name: 'Jordan',
+            age: 55
+        }
+        console.log('End');
+    }
+
+    let logger = createLogger();  //logger is our iterator
+
+    let newObject = logger.next();  
+  
+
+    console.log(newObject);  //{value: {name: 'Jordan', age: 55}, done:false}
+    ```
+
+7.  In addition, we can send data back from the iterator to the generator, by including it as a parameter of the next() method.  This will be the return value of the yield statement.
+    ```javascript
+    function* createLogger() {
+        console.log('Begin');
+        const val = yield {
+            name: 'Jordan',
+            age: 55
+        }
+        console.log('End', val);
+    }
+
+    let logger = createLogger();
+    
+    //runs the generator up to the yield statement
+    //This will result in the word "Begin" printing to the console.
+    //Also, newObject will have the value property of the object after
+    //the yield statement
+    let newObject = logger.next(); 
+    
+    //this will set the return value of the first yield statement to
+    //"Happy", which will be assigned to val in the generator.
+    //then the generator is run to its end causing "Happy" to be printed
+    //to the console
+    logger.next('Happy!');
+
+    //prints out the value object and done: false
+    console.log(newObject);
+    
+    //print value:undefined, done: true
+    console.log(logger.next());
+    ```
+    **NOTE**: Be careful as to where inputs are getting inserted. For example, if we have a single *yield* statement, the input into the generator will go where that section of the *next* statement begins. So, the **first** *next()* statment will not get its parameter assigned to anything. Also, the **last** *next()* statement can input a value into the generator, but its output will always be:
+    ```javascript
+    { value: undefined, done: true }
+    ```
+    
+    Because we can pause and unpause the running of the generator using *yield* and *next*, we can have asynchronous events, with any amount of stuff happening between hitting a yield statement and stating up again.
+
+6.  We can also use "throw", instead of 'next', to send an error into the generator.
+    ```javascript
+    function* createHello() {
+        const word = yield 2;
+        console.log(`Hello ${word}!`);
+    }
+
+    const hello = createHello()
+    let test = hello.next();
+    
+    //This will stop everything, and show the yield getting the error,
+    //as well as the input error message.
+    hello.throw('user error'); 
+    
+    console.log(test.value);
+    ```
+
+7.  We can use a standard try/catch to handle the error:
+    ```javascript
+    function* createHello() {
+        try {
+            const word = yield 2;
+            console.log(`Hello ${word}!`);
+        } catch (err) {
+            console.log('ERROR: ', err);
+        }
+    }
+
+    const hello = createHello();
+
+    let test = hello.next();
+    
+    //Now, the following will show the error in the output for the catch, 
+    //but will go on to the subsequet line of code.
+    hello.throw('user error'); 
+    console.log(test.value);
+    ```
+9.  Along with generators, ECMA-6 included a new kind of for loop to iterate of generators by value.  The **for . . . of** statement works as follows:
+    ```javascript
+    function* createCounter() {
+        yield 1;
+        yield 2;
+        yield 3;
+        yield 4;
+    }
+    
+    const counter = createCounter();
+    
+    for (let val of counter) {
+        console.log(val)
+    }
+    ```
+    The above loop will put out a list of 1, 2, 3, 4 to the console. Note that it does not give a final value of undefined. Also note that it is going through the generator, not merely pulling out the yield values. So if there were executable statments between the *yield* statements, they would be run.
+
+10. Note that a return statement in a generator, as opposed to a yield statment, will cause a return to the *next()* method of:
+    ```javascript
+    {value: [returned value], done: true};
+    ```
+
+#### Use of Generators With Promises
+
+Having taken a broad overview of promises and a more detailed look into generators, we will now work on combining the two to facilitate a coding style that is more synchronous in style, and hopefully avoids any trips into callback hell.  We will do so while constructing a program that will perform the following steps:
+
+a.  retrieves an array of strings from another file, in the form of a JSON string, and one element of such array being the URL of a weather website we want to access in order to get the weather for Richmond, Virginia,
+
+b.  parse the array string to convert it into a JSON array object,
+
+c.  grab the the URL from the array of strings,
+
+d.  make a get request to the URL in order to get the desired information,
+
+e.  extract the desired data from the response to our GET request, and
+
+f.  print to the console a statement in the form: "The weather in Richmond today is [cloudy/sunny/windy, etc].  The current temperature is [temperature in F] degrees Fahrenheit."
+
+##### **STEP ONE**
+
+First, we will start by creating a setup in which to run our code.
+
+1.  This example assumes you have Node.js and NPM installed and are familiar with their use. Create a directory (I will call mine "generators") and, from inside the directory, run *npm init* to create a *package.json* file.
+
+2.  Install the following package with npm:
+
+    a.  *node-fetch*, which will handle http get requests.
+
+3.  Create a file to hold some text. I am naming mine "strings.txt". In this file, add the following text:
+
+```javascript
+[
+    "Now is the winter of our discontent made glorious summer.",
+    "How oft when thou, my music, music play\'st",
+    "http://api.openweathermap.org/data/2.5/weather?q=Richmond&APPID="
+    "Four score and seven years ago, our forefathers brought forth on this continent"
+]
+```
+OpenWeatherMap.org is a weather api service with a free account offering that makes a convenient resource for testing out http requests. One must go to the site and sign up to obtain an API key, however. 
+
+4.   Create a file in our folder called "globals.js"  In this file, insert the following code:
+```javascript
+module.exports = {
+    weatherAPIKey: '[your API Key]'
+}
+```
+5.  Create a new file called "helpers.js".  For now, this file will export an object with a single method, our "promisify" method.  The contents should look like:
+```javascript
+const fs = require('fs');
+
+module.exports = {
+    readFileP (fileName, codeType) {
+        return new Promise((res, rej) => {
+            fs.readFile(fileName, { encoding: codeType }, (err, data) => {
+                if (err) {
+                    rej(err);
+                } else {
+                    res(data);
+                }
+            });
+        });
+    }
+}
+```
+6.  Finally, create our main file, which I will call app.com, with the following require statements at the top:
+```javascript
+const fetch = require('node-fetch');
+const helpers = require('./helpers');
+const source = './text.txt';
+const globals = require('./globals')
+```
+
+#####   **STEP TWO**
+
+In the *app.js* file, lets create a function called "getWeather".  To start, the code below reads as if everything acts synchronously; obviously it will not actually work!
+```javascript
+function* getWeather() {
+    //read in the text from our text file
+    const data = helpers.readFileP(source, 'utf-8');
+    //convert the string into a JSON object
+    const stringArray = JSON.parse(data);
+    //select the string in our array that is a URL;
+    const urlStem = stringArray.find(val => {
+        return val.includes('http:')
+    });
+    //add the APIKey to our URL
+    const url = urlStem.concat(globals.weatherAPIKey);
+    //go fetch the data at our URL
+    const response = yield fetch(url);
+    //parse the response to get the json data
+    const weather = yield response.json();
+    //assuming there is data returned
+    if(weather) {
+        let temp = weather.main.temp;
+        //convert Kelvin temps into Fahrenheit
+        if (temp > 150) {
+            temp = Math.round(temp * 9 / 5 - 459.67);
+        }
+        return `The weather in Richmond today is ${weather.weather[0].main.toLowerCase()}. The current temperature is ${temp} degrees Fahrenheit.`
+    } else {
+        return `The music of Wagner is much better than it sounds. - attr. Mark Twain`
+    }
+}
+```
+Obviously this code will not work, in three places it is using asynchronous functions: the *readFileP()*, *fetch()*, and *json()* methods.  What we will do, however, is take each of these three lines of code and tell our function to simply stop and wait, using the **yield** keyword.  The *yield* will come before the asynchronous function call, as follows:
+```javascript
+const data = yield helpers.readFileP(source, 'utf-8');
+```
+Because our readFileP method returns a promise, it will be that promise that is passed as a value into our iterator.  Then once that promise is resovled in a few milliseconds, a few seconds, or a few hours later, we will run the **next()** method on our iteratore, passing in our response, which will then be assigned to the variable.  Our total code would look as follows:
+```javascript
+const fetch = require('node-fetch');
+const helpers = require('./helpers');
+const source = './text.txt';
+const globals = require('./globals')
+
+function* getWeather() {
+    const data = yield helpers.readFileP(source, 'utf-8');
+    const stringArray = JSON.parse(data);
+    const urlStem = stringArray.find(val => {
+        return val.includes('http:')
+    });
+    const url = urlStem.concat(globals.weatherAPIKey);
+    const response = yield fetch(url);
+    const weather = yield response.json();
+    if(weather) {
+        let temp = weather.main.temp;
+        if (temp > 150) {
+            temp = Math.round(temp * 9 / 5 - 459.67);
+        }
+        return `The weather in Richmond today is ${weather.weather[0].main.toLowerCase()}. The current temperature is ${temp} degrees Fahrenheit.`
+    } else {
+        return `The music of Wagner is much better than it sounds. - attr. Mark Twain`
+    }
+}
+
+//create our iterator
+const weatherIterator = getWeather();
+
+//run getWeather until the first yield
+weatherIterator.next().value 
+    //when the promise received resolves, send it into the const data
+    .then(res => weatherIterator.next(res).value)
+    //when the promise received resolves, send it into the const response
+    .then(res => weatherIterator.next(res).value) 
+    //when the promise received resolves, send it into the const weather
+    .then(res => weatherIterator.next(res).value)
+    //if successful, log out the returned string to the console
+    .then(res => console.log(res))
+    //if not, log out the error message
+    .catch(err => console.log('ERROR: ', err));
+```
+
+#####   **STEP THREE**
+
+The above code really does allow us to write code in a very synchronous style within the *getWeather()* generator, using the generator's abilities to pause and restart and to pass values in and out.  However, notice that to make it work, we have to count up the number of asynchronous calls we are making in our generator and make sure we have the proper number of *then* statments so that we get enough *next()* methods to fully traverse our iterator.  Also, we might notice that, until the end, our *then* statements are all exactly the same:
+```javascript
+.then(res => weatherIterator.next(res).value)
+```
+After working with a few of these, we can see pretty clearly a general rule of "until we have gotten to the end, just resolve the promise, send the resolution back to the generatore and get the next promise."  Fortunately, the *done* property of the iterator object allows us to know that we have reached the end of the line, and instead of sending our resolution back to the generator, we do whatever it is we are supposed to do - in this case, log the data string to the console.
+
+The following is a clever implementation of the above general principle, for which I cannot claim credit. It operates in a recursive fashion, and the best way to understand will probably be to simply walk through it step-by-step a few times, until it becomes familiar.  The key, however, if it is difficult to follow at first review, may be to become familiar with the **Promise.resolve()** method and how it operates when the resolution of the returned Promise is itself a Promise.
+```javascript
+const fetch = require('node-fetch');
+const helpers = require('./helpers');
+const source = './text.txt';
+const globals = require('./globals')
+
+function* getWeather() {
+    const data = yield helpers.readFileP(source, 'utf-8');
+    const stringArray = JSON.parse(data);
+    const urlStem = stringArray.find(val => {
+        return val.includes('http:')
+    });
+    const url = urlStem.concat(globals.weatherAPIKey);
+    const response = yield fetch(url);
+    const weather = yield response.json();
+    if(weather) {
+        let temp = weather.main.temp;
+        if (temp > 150) {
+            temp = Math.round(temp * 9 / 5 - 459.67);
+        }
+        return `The weather in Richmond today is ${weather.weather[0].main.toLowerCase()}. The current temperature is ${temp} degrees Fahrenheit.`
+    } else {
+        return `The music of Wagner is much better than it sounds. - attr. Mark Twain`
+    }
+}
+
+//The following implements a helper method
+const weatherResult = coroutine(getWeather);
+weatherResult.then(weather => {
+    if (weather) {
+        console.log('res', weather);
+    }
+})
+
+//the following function may be kept in the helpers.js file
+function coroutine (gen) {
+    const iterator = gen();
+    const handler = (iterObject) => {
+        if (!iterObject.done){
+            return Promise.resolve(iterObject.value)
+                .then(resp => {
+                    handler(iterator.next(resp))})
+                .catch(err => console.log('ERROR: ', err ));
+        }
+        else {
+            return iterObject.value;
+        }
+    }
+    return handler(iterator.next());
+}
+```
+
+
+
+
 ## Socket.io
 ### Introduction
 1. **Web Sockets** is a protocal for two-way, real-time communication between a server and client. The client could be a web-app, a phone app, *etc.*
