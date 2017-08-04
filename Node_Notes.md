@@ -279,6 +279,275 @@ Note that many are now switching away from npm to **Yarn**, a joint project of F
 
 4. What we actually get is an error object, the most important property of which will be **code**.
 
+## Express
+
+1. Creating an Express server is super-simple, requiring only that we require Express, call the method **express()**, which returns the server, then running the **listen()** method on the server, as follows:
+    ```javascript
+    var server = require('express')();
+
+    server.listen([port#], callback(err))
+    ```
+2. Express allows us to set up routing very easily; for example, we can use the **get()** method on the server, passing in a route and a callback as parameters. The callback will have the request and response objects as parameters, as follows:
+    ```javascript
+    app.get('/users', (req, res) => {
+        res.send([some response]);
+    ```
+    **Note:** The **send()** method will automatically provide a *content-type* header of *tex/html*, unless the passed in argument is an object, in which case it will default to *application/json*.
+
+
+3. **Middleware** are functions in express that let us configure how express works. To add middleware, we call **app.use()**, and pass in the route and a callback function that will take three parameters: the *req* and *res* objects, and the *next* method, which when called will    
+
+4.  A very commonly used middleware is the **express.static()** method, which identifies a location where publicly-available static assets, such as images, html pages, *etc*., are kept. Typically, this will be in a directory named *public*, and is identified by the full path (which is simplified by using **__dirname**, as follows:
+    ```javascript
+    app.use(express.static(`${__dirname}/public`));
+    ```
+    
+To set up path for static files, use this middleware:
+    ```javascript
+    [app.use](express.static(root, [options]));
+    //place below calls for routing files, so http requests aren't
+    //searched first in the static files before getting to the route files.
+		
+3. To choose a template-engine and set the path for views:
+
+		app.set('views', './app/views');
+		app.set('view engine', 'jade');
+		
+4. Mounting middleware functions:
+
+		app.use([path], function(req, res, next) {
+			function(){}
+		});
+	"path" is for matching the route.  It will match any path that contains the given path, and any followed by a "/".  So, '/' will match '/', '/test', '/whatever'.  '/test' will match '/test/jordan', 'test/bob', etc., but will not match '/text'.
+	
+	The default is '/', so if no [path] is given, every request to app will be subject to the middleware.
+	
+5.  Calling middleware:  Express can chain multiple middleware in a single routing definitation.  For example: 
+
+		app.get('/', mid-function1, mid-function2)
+	
+### Templates & Engines
+1. As we saw above, it is very easy to set up a public folder to distribute out static web-pages. In addition, we can create HTML **templates** into which we can insert dynamic data.
+
+2. There are numerous options for templating engines (*ejs*, *pug*, *etc*.).  In the examples below, we will use *handlebars*, which can be found on npm as *hbs*. After installing it, we must require it into our server page, and then tell Express that it is being used, as follows:
+    ```javascript
+    //the second argument is the view engine we have chosen
+    app.set('view engine', 'hbs');
+    ```
+3. Once that is done, we can place our templates in a directory named **views**. Then, we can assign a template to a route using the **res.render()** method:
+    ```javascript
+    app.get('/about', (req, res) => {
+        res.render('about.hbs');
+    });
+    ```
+    **Note**: Express will know to look in the *views* directory to find the file, *about.hbs*.
+
+4. We can then interpolate data into the template by passing into the *res.render()* method as a second parameter an object of key-value pairs. Then we place the keys into the template, surrounded by double braces, {{ }}.
+
+####Express Methods
+There is only one Express method, the *static* method.  It is responsible for serving static assets of an Express application.  It takes the form:
+
+		express.static(root [,options])
+		//root is the root directory from which static assets will be served (typically 'public');
+		//options is an object of key:values.  See the express API document for the full list (typically without options).  
+
+####Application Methods
+The application object is an instance of the express application, and is primarily used to configure the application.
+
+1.  **app.use**: used to mount a middleware function.  Form is:
+
+		app.use([path], callback)
+
+2. **app.all**: This is the same thing as the app.[GET/POST/PUT/DELETE] methods, except it matches all HTTP verbs.  It is useful as a mapping device for global logic.  Example:
+
+		app.all('*', requireAuth, loadUser);
+	This would have all requests, to all routes, going to the requireAuth middleware, then to the loadUser middleware.  Of course, the app.all could apply to specified routes.
+	
+	
+3. **app.get**: This method sends the get request to the designated path (i.e., the first parameter).  Subsequent functions included as parameters will act as middleware, going from one to the next in order, but they can invoke *next ('route')* to bypass the remaining).
+
+		app.get('/', function(req, res){}, function(req, res){});
+
+4. **app.delete**: Similar in style to *app.get*.
+
+5. **app.post**: Similar in style to *app.get*.
+
+6. **app.put**: Similar in style to *app.put*.
+
+
+
+7.  **app.route**: this returns an instance of a single route, which can then handle HTTP verbs with middleware.  Its form is:
+
+		app.route(path)
+
+	Common use is to be followed by HTTP verbs.  Example is:
+	
+		app.route(/route)
+			.all(fucntion(req, res, next) {}) //runs on all HTTP verbs.
+
+9.  **app.param**: used to attach functionality to any request made to a path that includes a designated parameter.  In form of:
+
+		app.param([name], function(req, res, next){}) // [name] is the name of the parameter, or an array of them.
+
+10. **app.render**: returns a rendered HTML view via a callback function.  Has three parameters: i) the view, ii) an object of local variables to inject into the view, iii) a callback function.
+
+	This method is very similar to *res.render*, except it cannot send the rendered view to the client.  Res.render actually uses app.render behind the curtains, but then sends it.  App.render might be used for things not to be sent as a response, such as e-mail templates.
+	
+11. **app.set**: used to set the settings for the application.  For a complete list of the values that can be set, see the Express API.  The form is as follows:
+
+		app.set(settingName, valule)
+		
+	The most commonly used is probably the "views" and "view engine" settings.
+
+
+
+####Request Methods
+The request object is a wrapper of the Node.js HTTP request object and is used to extract information aoub the HTTP request.
+
+1. **req.query**: an object containing the parsed query-string parameters.
+
+2. **req.param** a request METHOD, it is used to return a value, or to set the value if it includes the second ('defaultValute') parameter.  It looks for the given parameter in the following places, in this order: 
+	a. req.params
+	b. req.body
+	c. req.query
+
+			req.param('name', [opt def value])
+			
+	This method is deprecated.  Should use req.params, req.body or req.query.
+
+3. **req.body** a request PROPERTY, it is an object of key-value pairs of data submitted in the request body.  It is undefined by default, and populated by such middleware as body-parser.
+
+4. **req.params** is a request object containing properties mapped to the parameters of the named route.  It has a default of {}.  If their is a route, for example, of /user/:name, then there will be added a name parameter in params.
+
+5. **req.query**: a request object containing a key for each string parameter in the route.  If no query string, it is {};
+
+		//GET /shoes?order=desc&shoe[color]=blue&shoe[type]=converse
+		
+		results in the following req.query object:
+		
+				{
+					order: 'desc',
+					shoe: {
+						color: 'blue',
+						type: 'converse'
+					}
+				}
+
+
+
+
+
+
+####Response Methods
+The response object is a wrapper of NodeJs HTTP response object, and is used to set response data and headers.
+
+1.	**res.send**: used to i) set content-type header and send a response using Connect's res.end() method.  It sets the 'content-type' header to 'text/html' for a string, to 'application/octet-stream' for a buffer, and to 'application/json' for an object or array.
+
+2. **res.json**: used to send a json response.  Identical to res.send, but with an object/array as parameter.  It can also convert other values to json (such a null, or undefined);
+
+3. **res.status**: used to set the HTTP status code of the response.  Follows the form:
+
+		res.status(code)
+		
+		Ex: res.status(400).send('Bad Reqest');
+		
+		Ex: res.status(404).sendFile('/absolutepat/to/404.png')
+
+4. **res.redirect**: redirects an incoming request to the url derived from the specified path.  Default status code is 302, but can be set as the first parameter).  The redirect can be to a different site url (https://google.com); a path relative to the root of the host name.  To do so, include a preceding '/' (res.redirect('/admin')), or to a relative path.  Res.redirect('back') will redirect the request back to the referer (or '/', if missing).
+
+4. **res.render**: takes the form res.render(view [,locals], [, callback(err)])
+
+	It renders a view, and sends the rendered HTML string to the client.  Locals is an object of key:value pairs of local variables for the view.
+	NOTE: if a callback is specified, the rendered HTML strng must be sent explicitly, with a res.send() or res.end() method.
+	
+5. **res.sendFile**: takes the form res.sendFile(path[,options][,callback])
+
+	res.sendFile() transfers the file contained at the given path, setting the Content-Type response header based on the filename extension.  The path must be absolute, unless the root option is set in the options object.  See documentation for description of other object properties:
+	
+		app.get('/file/:name', function(req, res, next) {
+			var options = {
+				root: __dirname + '/public',
+			}
+			var fileName = req.params.name;
+			res.sendFile(fileName, options, function(err) {
+				if(err) {}
+			})
+		})
+
+
+
+####Basic Structure Setup:
+
+1.  As a basic project setup, it may be helpful to keep the following structure:
+
+		app
+			controllers
+			models
+			routes
+			views
+		config
+			env
+			config.js //to configure the Express application
+			express.js //to initialize Express application
+		public
+			css
+			img
+			scripts
+		server.js //the main file of the application, will load the express.js file as a module to bootstrap the Express application.
+		package.json
+		
+	Note that their will be sever other folders in the public file when Angular is involved.
+
+####Configuration
+
+In Express, one can set up alternate configurations, and switch between them based on the environment. Typically, different configuarations are used for development and production.  This can be kept in node.js's **process.env.NODE_ENV** variable.  Take the following steps:
+
+1. In the main file (server.js/app.js), start with the following line:
+
+		process.env.NODE_ENV = process.env.NODE_ENV || 'development';
+		
+	This defaults to the development configuration.  This can be changed when uploading to Heroku to "production".
+	
+2. In the config/express.js file, have conditional middleware calls based on the value of process.env.NODE_ENV.
+
+3. In the config folder, create an 'env' subfolder with separate files for each environment ('dev.js', 'production.js').
+
+4. In the config folder, create a 'config.js' file containing the following snippet:
+
+		module.exports = require('./env/' + process.env.NODE_ENV + '.js');
+		
+	This file, when called, simply requires the appropriate env configuration file.  It should be required into the express.js config file.
+	
+
+
+###Express-Session
+
+1.  Express-session places a cookie with a unique ID on the client browser, so that user-specific data can be maintained during the client's session.  The actual data is on the server side.
+
+2.  First step is to set a secret string in the dev and production env files.
+
+		sessionSecret: 'developmentSecretWord'
+
+3. After requiring 'express-session' into the express.js config file, it will need to be called as middleware, with app.use.
+
+		app.use(session({
+			saveUnitialized: false,
+			resave: false,
+			secret: config.sessionSecret
+		)));
+		//config.sessionSecret refers to the dev/production env file.
+		//saveUnitialized: a session is unitialized when it is new but not modified.  False helps comply with legal requirements of user permission before storing a cookie.
+		//resave: false is being made the new default value.  If true, the session will be saved to the session store, even if the session was never modified during the request.
+
+4. The session middleware adds a *session* object to all request objects.  Once the session is established, data can be added to the session object, and then gotten from req.session.[whatever].``
+
+
+
+
+
+
+
+
 ## Promises
 
 :::danger
@@ -388,6 +657,32 @@ x.then((res) => {
 The code above will result in a giant response object appearing in the console, aasuming Google coughs up its response.  If something goes wrong (for example, if you have Comcast as your internet provider), then you will end up getting an error object, to be handled by the callback passed in as the second parameter.
 
 Promises do have some other features that make them more convenient to work with than callbacks. For example, they can be chained, and a **.catch()** method can be placed at the end of the chain, so that there is a single location for handling errors that arise, rather than having a separate error handling function for each promise in a chain. In addition, there are methods for handling multiple promises at a time and other situations; however, we will leave those points for the reader to research, in order to get to our primary focus, the use of generators.
+
+#### Avoiding Descent into Callback Hell With Chaining
+
+1. The following is a very simple, but real world example of how we can use promises to avoid the need to nest one action inside another, and thus avoid sliding into a *promise hell* situation. We will use two async calls to i) first, get the geolocation coordinates of the address we enter, then ii) call a weather API with our lat/lng pair to get current weather info. Obviously, with callbacks, we cannot start the second action until the first one is complete, so the second call will be made in the callback function of the successful first call.
+
+2. We could also do something very similar with promises, calling the weather service in the callback of the *then()* method upon a successful first step. Then, upon successful return onf the weather data, we can have a *then* callback to the weather fetch.  In sum, it would look like:
+    ```javascript
+    axios.get(geocodeURL).then((response) => {
+        //do stuff with response data
+        axios.get(weatherURL).then((response) => {
+            //do stuff with the weather data
+        }
+    }
+    ```
+    In contrast to the above, we can have our second *axios* request return a promise, which will then allow us to chain our second *then* statement to the first *then* statement, rather than burying it inside.  So, we would have something along the lines of:
+    ```javascript
+    axios.get(geocodeURL).then((response) => {
+        //do stuff with response data
+        return axios.get(weatherURL)
+        }).then((response) => {
+            //do stuff with the weather data
+        })   
+    ```
+
+
+However, we can avoid this by 
 
 #### One Last Issue - Promisifying an Asynchronous Method
 
