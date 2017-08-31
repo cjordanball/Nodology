@@ -295,7 +295,7 @@ Note that many are now switching away from npm to **Yarn**, a joint project of F
     **Note:** The **send()** method will automatically provide a *content-type* header of *tex/html*, unless the passed in argument is an object, in which case it will default to *application/json*.
 
 
-3. **Middleware** are functions in express that let us configure how express works. To add middleware, we call **app.use()**, and pass in the route and a callback function that will take three parameters: the *req* and *res* objects, and the *next* method, which when called will    
+3. **Middleware** are functions in express that let us configure how express works. To add middleware, we call **app.use()**, and pass in the route and a callback function that will take three parameters: the *req* and *res* objects, and the *next* method, which when called will send us on to the next registered middleware.   
 
 4.  A very commonly used middleware is the **express.static()** method, which identifies a location where publicly-available static assets, such as images, html pages, *etc*., are kept. Typically, this will be in a directory named *public*, and is identified by the full path (which is simplified by using **__dirname**, as follows:
     ```javascript
@@ -342,7 +342,123 @@ To set up path for static files, use this middleware:
     ```
     **Note**: Express will know to look in the *views* directory to find the file, *about.hbs*.
 
-4. We can then interpolate data into the template by passing into the *res.render()* method as a second parameter an object of key-value pairs. Then we place the keys into the template, surrounded by double braces, {{ }}.
+4. We can then interpolate data into the template by passing into the *res.render()* method as a second parameter an object of key-value pairs. Then we place the keys into the template, surrounded by double braces, {{ }}. For example:
+    ```javascript
+    //server.js
+    app.get('/about', (req, res) => {
+        res.render('about.hbs', {
+            pageTitle: 'About Page',
+            currentYear: new Date().getFullYear()
+        });
+    });
+    ```
+    ```html
+    <!--about.hbs-->
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <meta charset="utf-8">
+            <title>Some Website</title>
+        </head>
+        <body>
+            <h1>{{pageTitle}}</h1>
+            <p>Some text here!</p>
+            <footer>
+                <p>Copyright {{currentYear}}</p>
+            </footer>
+        </body>
+    </html>
+    ```
+
+5. As we move beyond having a small number of view pages, we may want to take out parts that are common to all, or at least multiple, pages and keep the segregated. This will allow us to update them as necessary in a single location, rather than having to go into each view file to update. For example, it is very common to have a *header* or a *footer* on each page. These pieces are known as **partials**. 
+
+6. With Handlebars, we must register the directory in which we are going to keep our partial files, with a single line of code using the **registerPartials()** method on the *hbs* object:
+    ```javascript
+    //server.js
+    //requires absolute path to directory
+    hbs.registerPartials(`${__dirname}/views/partials`);
+    ```
+7. Then, we create the *partial* file, just like it was a regular template. Finally, we call the partial into the parent template with the following syntax:
+    ```html
+    <!--home.html, insert the foooter partial -->
+    {{> footer}}
+    ```
+8. In addition, we can register helper methods with Handlebars to run in the template. For example, we could have a line such as:
+    ```javascript
+    //server.js
+    //two parameters, a name and a function
+    hbs.registerHelper('getCurrentYear', () => {
+    return new Date().getFullYear()
+    });
+    ```
+    Then, where we need to have the year in a template, we just place *{{getFullYear}}*, and we do not have to place it into each individual route.
+    
+    **Note**: Our registered helper can take parameters, but uses a strange syntax, as follows:
+     ```javascript
+     <h1>{{helperName [arg1Name] [arg2Name] . . .}}
+     ```
+    Note that the method is followed by arguments with no parens, but only a space separating the method and the first argument, and each argument thereafter.
+    
+## Express Middleware
+### Introduction
+1. **Middleware** are functions in express that let us configure how express works. To add middleware, we call **app.use()**, and pass in the route and a callback function that will take three parameters: the *req* and *res* objects, and the *next* method, which when called will take us on to the next registered middleware in line.
+
+2. Middleware is **registered** with Express using the **app.use()** method.
+    ```javascript
+    app.use([path,] callback [, callback]);
+    ```
+    The path is the path for which the middleware function is invoked (default is '/'), and the *callbacks* can be a middleware function, a series of such functions separated by commas, or an array of middleware functions.
+    
+    For example, we have a very simple middleware to tell Express where our static files are:
+    ```javascript
+    app.use([express.static(`${__dirname}/public`);
+    ```
+ 
+3. The callback in our *app.use()* method takes three parameters, **req**, **res**, and **next**. The last of these is used to tell Express when our middleware function is done. If *next()* is not called, the app will not move on to the next thing, but will get stuck. So, for example, if we have the following middleware:
+    ```javascript
+    app.use('/toast', (req, res, next) => {
+	console.log('test0');
+    });
+    ```
+    My app will work fine, until somebody visits the */toast* route, at which point "test0" will print to the console and the page will hang, waiting for the **next()** command that never comes. If, instead, our middleware was:
+    ```javascript
+    app.use((req, res, next) => {
+	console.log('test0');
+        next();
+    });
+    ```
+    **Every** route would hit the middleware, as the default value is "/", and so every request would print "test0" to the console, and the app would move on.
+
+4. It is **very important** to note that Express middleware is called in order as it is written. So, for example, we will probably want to have our *express.static()* setting middleware at the end, so that it only gets called if other middleware allows it to get that far.
+
+## SSH Keys - Setting Up and GitHub
+1. To see if you have any SSH keys already on your computer, type at the command line:
+    ```
+    ls -al ~/.ssh
+    ```
+
+2. To generate an SSH key, type at the command line:
+    ```
+    ssh-keygen -t rsa -b 4096 -C '[email address]'
+    ```
+    This will create a couple of files, the public/private key pair. We can then just hit enter a few times to accept the default filename and no passphrase option.
+    
+3. The **id_rsa** file is the **private key** file. **Never give access to this file.** The **id_rsa.pub** file is the **public key** file.
+
+4. At this point, we need to run the **ssh-agen**. To do so, type at the command line:
+    ```
+    eval "$(ssh-agent -s)"
+    ```
+    If this is correctly entered, then we should get back a message with the pid (process id) of the SSH-Agent.
+    
+5. Then, we have to tell the SSH-Agent where the private-key file is:
+    ```
+    ssh-add ~/.ssh/id_rsa
+    ```
+    Assuming all went well, we should get back an "Identity Added" message. The computer now knows where to look if it needs the ssh key credentials.
+
+:::danger
+:::
 
 ####Express Methods
 There is only one Express method, the *static* method.  It is responsible for serving static assets of an Express application.  It takes the form:
@@ -354,9 +470,7 @@ There is only one Express method, the *static* method.  It is responsible for se
 ####Application Methods
 The application object is an instance of the express application, and is primarily used to configure the application.
 
-1.  **app.use**: used to mount a middleware function.  Form is:
 
-		app.use([path], callback)
 
 2. **app.all**: This is the same thing as the app.[GET/POST/PUT/DELETE] methods, except it matches all HTTP verbs.  It is useful as a mapping device for global logic.  Example:
 
@@ -1092,7 +1206,11 @@ function coroutine (gen) {
 }
 ```
 
-
+## Node - Path Module
+1. The **path** module contains a number of useful methods for working with paths in our applications. To use them, we must require in *path*:
+    ```javascript
+    const path = require('path');
+    ```
 
 
 ## Socket.io
@@ -1107,4 +1225,37 @@ function coroutine (gen) {
     
     b. **XHR Long Polling**: the client would make an XHR request to the server, but the server doesn't respons until it has some data to send. Upon receiving a response, the client immediately sends a new request.
     
-    c. **Websockets**: This is the new protocol for real-time communication with HTML5.  A protocol "handshake" is made over HTTP and, once the connection is established, the client and server can have an ongoing communication channel over a TCP socket.
+    c. **Websockets**: This is the new protocol for real-time communication with HTML5.  A protocol "handshake" is made over HTTP and, once the connection is established, the client and server can have an ongoing communication channel in both directions over a TCP socket.
+    
+4. On both the client and server, we will have a connection, which will be creating and listening for *events* to and from the other end of the connection.
+
+
+4. To set up websockets, we will use a library called **sockets.io**. This library has consists of both a *server* and *front-end* library.
+
+5. After installing the **socket.io** library, we need to require it into our server.js page:
+    ```javascript
+    const socketIO = require('socket.io');
+    ```
+    
+6. **Broadcast** is the method for emitting an event to everybody **except** the one who sent it.
+    ```javascript
+    io.on('connection', (socket) => {
+        console.log('New user connected.');
+
+        socket.on('createMessage', (newMessage) => {
+            console.log('createEmail', newMessage);
+                io.emit('newMessage', {
+                    from: newMessage.from,
+                    text: newMessage.text,
+                    createdAt: new Date()
+                })
+            })
+        
+        socket.broadcast.emit('eventName', () => {});
+
+        socket.on('disconnect', () => {
+            console.log('User disconnected.');
+        });
+    });
+    ```
+    In contrast, **socket.emit()** will send it back to the same socket, and **io.emit()** will send it to all sockets, including the emitting socket.

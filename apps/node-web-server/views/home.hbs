@@ -6,11 +6,9 @@
 		<title>Some Website</title>
 	</head>
 	<body>
-		<h1>{{pageTitle}}</h1>
+		{{> header}}
 		<p>Some text here!</p>
-		<footer>
-			<p>Copyright {{CurrentYear}}</p>
-			<p>{{welcomeMessage}}</p>
-		</footer>
+		<p>{{welcomeMessage}}</p>
+		{{> footer}}
 	</body>
 </html>
